@@ -1,33 +1,55 @@
+# encoding: utf-8
+from __future__ import unicode_literals
 import bottle
 import os
+import logging
+import random
 
+import snake
+
+LOG = logging.getLogger(__name__)
+
+nol = 'Nöl'
+snake_name = 'Nol-%d!' % random.randint(0, 100)
+snake_color = "#%06x" % random.randint(0, 0xffffff)
 
 @bottle.route('/static/<path:path>')
 def static(path):
     return bottle.static_file(path, root='static/')
 
 
-@bottle.get('/')
-def index():
-    head_url = '%s://%s/static/head.png' % (
+def head_url():
+    ret = '%s://%s/static/head.png' % (
         bottle.request.urlparts.scheme,
         bottle.request.urlparts.netloc
     )
+    LOG.debug("head_url=%s", ret)
+    return ret
 
-    return {
-        'color': '#00ff00',
-        'head': head_url
+@bottle.get('/')
+def index():
+    LOG.warn("index")
+
+
+    ret = {
+        'color': snake_color,
+        'head_url': head_url()
     }
+
+    LOG.warn("index ret=%s", ret)
+
+    return ret
 
 
 @bottle.post('/start')
 def start():
     data = bottle.request.json
 
-    # TODO: Do things with data
-
     return {
-        'taunt': 'battlesnake-python!'
+        'name': snake_name,
+        'color': snake_color,
+        'taunt': 'Nol!',
+        'head_url': head_url()
     }
 
 
@@ -35,11 +57,11 @@ def start():
 def move():
     data = bottle.request.json
 
-    # TODO: Do things with data
+    move = snake.battlesnake_move(data, snake_name)
 
     return {
-        'move': 'north',
-        'taunt': 'battlesnake-python!'
+        'move': move,
+        'taunt': 'Nol!',
     }
 
 
@@ -47,10 +69,8 @@ def move():
 def end():
     data = bottle.request.json
 
-    # TODO: Do things with data
-
     return {
-        'taunt': 'battlesnake-python!'
+        'taunt': 'Nol!',
     }
 
 
