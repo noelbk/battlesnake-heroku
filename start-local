@@ -1,0 +1,10 @@
+#! /bin/bash
+# start snakes 1-8 locally
+
+set -eu
+
+mkdir -p out
+for i in $(seq 1 8); do
+  SNAKE_NAME="local-$i" SNAKE_COLOR="$(printf '#%06x' $((RANDOM * 0xffffff / 32767)))" PORT="$((5000+i))" heroku local > out/snake-"$i".out 2>&1 &
+  echo "$!" > out/snake-"$i".pid
+done

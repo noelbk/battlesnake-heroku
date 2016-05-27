@@ -4,14 +4,15 @@ import bottle
 import os
 import logging
 import random
+import os
 
-import snake
+from . import snake
 
 LOG = logging.getLogger(__name__)
 
-nol = 'Nöl'
-snake_name = 'Nol-%d!' % random.randint(0, 100)
-snake_color = "#%06x" % random.randint(0, 0xffffff)
+snake_name = os.environ.get('SNAKE_NAME', 'Nöl')
+snake_color = os.environ.get('SNAKE_COLOR', '#fe642e')
+# '#%06x' % random.randint(0, 0xffffff)
 
 @bottle.route('/static/<path:path>')
 def static(path):

@@ -1,0 +1,4 @@
+#! /bin/bash
+
+kill $(cat out/snake-*.pid)
+ps wwaux | grep -i battlesnake | awk '{print $2}' | xargs kill
