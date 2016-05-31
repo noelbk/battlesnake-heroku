@@ -1,17 +1,17 @@
 # encoding: utf-8
 from __future__ import unicode_literals
-import bottle
 import os
 import logging
-import random
-import os
+
+import bottle
 
 from . import snake
 
 LOG = logging.getLogger(__name__)
 
-snake_name = os.environ.get('SNAKE_NAME', 'Nöl')
-snake_color = os.environ.get('SNAKE_COLOR', '#fe642e')
+SNAKE_NAME = os.environ.get('SNAKE_NAME', 'Shnözz')
+SNAKE_TAUNT = "The sweet smell of victory"
+SNAKE_COLOR = os.environ.get('SNAKE_COLOR', '#fe642e')
 # '#%06x' % random.randint(0, 0xffffff)
 
 @bottle.route('/static/<path:path>')
@@ -33,7 +33,7 @@ def index():
 
 
     ret = {
-        'color': snake_color,
+        'color': SNAKE_COLOR,
         'head_url': head_url()
     }
 
@@ -44,11 +44,11 @@ def index():
 
 @bottle.post('/start')
 def start():
-    data = bottle.request.json
+    _data = bottle.request.json
 
     return {
-        'name': snake_name,
-        'color': snake_color,
+        'name': SNAKE_NAME,
+        'color': SNAKE_COLOR,
         'taunt': 'Nol!',
         'head_url': head_url()
     }
@@ -58,20 +58,20 @@ def start():
 def move():
     data = bottle.request.json
 
-    move = snake.battlesnake_move(data, snake_name)
+    next_move = snake.battlesnake_move(data, SNAKE_NAME)
 
     return {
-        'move': move,
-        'taunt': 'Nol!',
+        'move': next_move,
+        'taunt': SNAKE_TAUNT,
     }
 
 
 @bottle.post('/end')
 def end():
-    data = bottle.request.json
+    _data = bottle.request.json
 
     return {
-        'taunt': 'Nol!',
+        'taunt': SNAKE_TAUNT,
     }
 
 
