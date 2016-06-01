@@ -79,12 +79,19 @@ def test_snake():
         3,   4,   3,   4,   5,   6,
         ], 6)
 
-    assert board.smell_space() == [
+    space_by_move, space_max, space_map = board.smell_space()
+    assert space_map == [
         'left',   'up',    'up',    'up',   None,  'right',
         'left', 'left', 'right', 'right', 'right', 'right',
         'left',   None, 'right', 'right',    None,    None,
         'left', 'left', 'right', 'right', 'right', 'right',
         ]
+    assert space_by_move == {
+        'left': 6,
+        'right': 11,
+        'up': 3,
+        }
+    assert space_max == 11
 
     assert board.move() == 'right'
 
@@ -105,3 +112,10 @@ def test_snake():
         "      ",
         )
     assert board.move() == 'down'
+
+    assert board.dump() == (
+        '| *  #*|\n'
+        '|    BA|\n'
+        '|      |\n'
+        '|      |\n'
+        )

@@ -3,6 +3,7 @@ import string
 import logging
 
 LOG = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 Cell = namedtuple('Cell', ['index', 'value'])
 
@@ -65,6 +66,9 @@ class Board(list):
     def index(self, x, y):
         """convert (x,y) coordinates to an integer index in my array"""
         return y * self.xmax + x
+
+    def get(self, x, y):
+        return self[self.index(x, y)]
 
     def put(self, x, y, val):
         self[self.index(x, y)] = val
@@ -156,27 +160,28 @@ class Board(list):
 
                 todo.append((Cell(next_cell.index, move_name), dist+1))
 
-        return space_map
-
-    def move(self):
-        food, food_max = self.smell_food()
-        enemy, _enemy_max = self.smell_enemy()
-        dist, _dist_max = self.smell_self()
-        space = self.smell_space()
-
-        head = self.head()
-
+        # count spaces from space_map
         space_by_move = {}
-        for cell in space:
+        space_max = self.xmax * self.ymax
+        for cell in space_map:
             # 1 point per cell, minus the likelihood that I'll meet an enemy there
             if not cell.value:
                 continue
             if cell.value not in space_by_move:
                 space_by_move[cell.value] = 0.0
-            space_by_move[cell.value] += 1.0 - 1.0 / (max(enemy[cell.index], 1.0) * max(dist[cell.index], 1.0))
+            space_by_move[cell.value] += 1.0 # - 1.0 / (max(enemy[cell.index], 1.0) * max(dist[cell.index], 1.0))
         if space_by_move:
             space_max = max(space_by_move.values())
-            space_by_move = {k: v/space_max for k, v in space_by_move.items()}
+
+        return space_by_move, space_max, space_map
+
+    def move(self):
+        food, food_max = self.smell_food()
+        enemy, enemy_max = self.smell_enemy()
+        dist, _dist_max = self.smell_self()
+        space_by_move, space_max, space_map = self.smell_space()
+
+        head = self.head()
 
         # make sure the closest food isn't too far away to eat
         closest_food = 1 + min([INF] + [food[move.index] for move in self.neighbours(head.index)])
@@ -190,28 +195,57 @@ class Board(list):
 
             score = 0.0
 
+            score_enemy = 0
             if enemy[move.index] <= 1:
                 # bad!  Do not go where an enemy could move next
-                score -= 4.0
+                score_enemy = -10
+            elif enemy[move.index] != INF:
+                score_enemy = float(enemy[move.index]) / enemy_max
+            score += score_enemy
 
-            if self.ttl < 2 * closest_food:
-                # I'm hungry, get food!
-                score += 2.0 * (1.0 - (food[move.index] or 0)/food_max)
+            score_food = 0
+            if food[move.index] != INF:
+                score_food = (1.0 - food[move.index] / food_max)
+                if self.ttl < max(2 * closest_food, STARVATION_TURNS / 25):
+                    # I'm hungry, get food!
+                    score_food = score_food * 8
+            score += score_food
 
             # prefer open space
-            score += space_by_move.get(move.value, 0.0)
+            score_space = float(space_by_move.get(move.value, 0.0)) / space_max
+            score += score_space
+
+            # debug
+            LOG.debug("move=%s score=%s ttl=%s closest_food=%s score_enemy=%s score_food=%s score_space=%s",
+                      move.value, score, self.ttl, closest_food, score_enemy, score_food, score_space)
 
             if score > best_score:
                 best_move = move.value
                 best_score = score
 
+        # debug
+        LOG.debug("best_move=%s", best_move)
+
         return best_move
+
+    def dump(self):
+        s = ""
+        for cell in self:
+            x, y = self.coords(cell.index)
+            if x == 0:
+                s += "|"
+            #else:
+            #    s += " "
+            s += str(cell.value)
+            if x == self.xmax-1:
+                s += "|\n"
+        return s
 
 def battlesnake_move(data, snake_name):
     ymax = len(data['board'])
     xmax = len(data['board'][0])
 
-    board = Board(xmax, ymax)
+    board = Board(xmax, ymax, CELL_TYPE_SPACE)
 
     debug_data = data.copy()
     del debug_data['board']
@@ -234,7 +268,9 @@ def battlesnake_move(data, snake_name):
             snake_id = next(enemy_ids)
 
         for x, y in snake['coords']:
-            board.put(x, y, snake_id)
+            if board.get(x, y) == CELL_TYPE_SPACE:
+                board.put(x, y, snake_id)
             snake_id = snake_id.lower()
 
+    LOG.debug("battlesnake_board board=\n%s\n", board.dump())
     return board.move()

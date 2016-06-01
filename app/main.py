@@ -5,7 +5,12 @@ import logging
 
 import bottle
 
-from . import snake
+# use old snake
+if os.environ.get('SNAKE_OLD', ''):
+    from . import snake2 as snake
+else:
+    from . import snake
+
 
 LOG = logging.getLogger(__name__)
 
