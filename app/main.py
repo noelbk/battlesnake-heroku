@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 import os
 import logging
+import random
 
 import bottle
 
@@ -16,7 +17,7 @@ LOG = logging.getLogger(__name__)
 
 SNAKE_NAME = os.environ.get('SNAKE_NAME', 'Shnözz')
 SNAKE_TAUNT = "The sweet smell of victory"
-SNAKE_COLOR = os.environ.get('SNAKE_COLOR', '#fe642e')
+SNAKE_COLOR = os.environ.get('SNAKE_COLOR', "#%0x" % random.randint(0, 0xffffff))
 # '#%06x' % random.randint(0, 0xffffff)
 
 @bottle.route('/static/<path:path>')
