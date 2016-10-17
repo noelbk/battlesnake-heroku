@@ -1,0 +1,10 @@
+# This is a comment
+FROM Dockerfile.base
+MAINTAINER Noel Burton-Krahn <noel@burton-kahn.com>
+WORKDIR /app
+ADD etc /etc
+ADD . .
+RUN apt-get -y install $(cat requirements.apt)
+RUN make install
+CMD make run SNAKE_NAME="docker-$HOSTNAME"
+
