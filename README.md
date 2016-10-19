@@ -1,63 +1,63 @@
-# battlesnake-python
+# Battlesnake - Duelling Snake AIs
 
-A simple [BattleSnake AI](http://battlesnake.io) written in Python. 
+[Battlesnake](http://www.battlesnake.io/) is a great AI competition
+started by [SendWithUs](http://sendwithus.com).  This
+is [my snake](app/snake.py), wrapped up in [Docker](http//docker.com)
+containers so you can try it yourself locally.  Here's how:
 
-Visit [battlesnake.io/readme](http://battlesnake.io/readme) for API documentation and instructions for running your AI.
+Running a local arena
+---------------------
 
-This AI client uses the [bottle web framework](http://bottlepy.org/docs/dev/index.html) to serve requests and the [gunicorn web server](http://gunicorn.org/) for running bottle on Heroku. Dependencies are listed in [requirements.txt](requirements.txt).
+0. install [Docker](http//docker.com).
 
-[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
+1. build a docker image for the battlesnake snake
 
-#### You will need...
+    ```
+	docker build -t battlesnake-python github.com/noelbk/battlesnake-heroku
+    ```
 
-* a working Python 2.7 development environment ([getting started guide](http://hackercodex.com/guide/python-development-environment-on-mac-osx/))
-* experience [deploying Python apps to Heroku](https://devcenter.heroku.com/articles/getting-started-with-python#introduction)
-* [pip](https://pip.pypa.io/en/latest/installing.html) to install Python dependencies
+2. build a docker image for the battlesnake server
 
-## Running the Snake Locally
+    ```
+    docker build -t battlesnake-server github.com/noelbk/battlesnake-legacy
+    ```
 
-1) [Fork this repo](https://github.com/sendwithus/battlesnake-python/fork).
+3. start the server
 
-2) Clone repo to your development environment:
-```
-git clone git@github.com:username/battlesnake-python.git
-```
+    ```
+    docker run -d battlesnake-server
+    ```
 
-3) Install dependencies using [pip](https://pip.pypa.io/en/latest/installing.html):
-```
-pip install -r requirements.txt
-```
+4. Connect to the server
 
-4) Run local server:
-```
-python app/main.py
-```
+    ```
+    docker inspect --format 'http://{{ .NetworkSettings.IPAddress }}:5000/play/new' $(docker ps -f ancestor=battlesnake-server --format={{.ID}})
+    ```
 
-5) Test client in your browser: [http://localhost:8080](http://localhost:8080).
+5. start some snakes
 
-## Deploying to Heroku
+    ```
+    for i in $(seq 1 4); do docker run -d battlesnake-python; done
+    ```
 
-1) Create a new Heroku app:
-```
-heroku create [APP_NAME]
-```
+6. print the snake urls and insert them into the game
 
-2) Deploy code to Heroku servers:
-```
-git push heroku master
-```
+    ```
+    docker inspect --format 'http://{{ .NetworkSettings.IPAddress }}:5000' $(docker ps -f ancestor=battlesnake-python --format={{.ID}})
+    ```
 
-3) Open Heroku app in browser:
-```
-heroku open
-```
-or visit [http://APP_NAME.herokuapp.com](http://APP_NAME.herokuapp.com).
+Start Game.  (Set the turn time to 0.05 for a faster game)
 
-4) View server logs with the `heroku logs` command:
-```
-heroku logs --tail
-```
+![Add Snakes](battlesnake-add.png)
 
-## Questions?
+Start Automated.
 
-Email [battlesnake@sendwithus.com](mailto:battlesnake@sendwithus.com), or tweet [@send_with_us](http://twitter.com/send_with_us).
+![Run Automated](battlesnake-run.png)
+
+To the Death!
+
+
+Have fun playing, and if you're in Victoria, BC, hope to see you in 2017.
+
+--
+Noel
